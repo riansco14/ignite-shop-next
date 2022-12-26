@@ -1,15 +1,11 @@
 import Image from 'next/image'
-import LogoImg from '../assets/logo.svg'
 import { HomeContainer, Product } from '../stitches/pages/home'
 
-import camiseta1 from '../assets/1.png'
-import camiseta2 from '../assets/2.png'
-import camiseta3 from '../assets/3.png'
 
 import 'keen-slider/keen-slider.min.css'
 import { useKeenSlider } from 'keen-slider/react'
 import { stripe } from '../lib/stripe'
-import { GetServerSideProps } from 'next'
+import { GetStaticProps } from 'next'
 import Stripe from 'stripe'
 
 interface HomeProps {
@@ -44,7 +40,7 @@ export default function Home({ products }: HomeProps) {
     {
       products.map( product => {
         return (
-          <Product className="keen-slider__slide">
+          <Product key={product.id} className="keen-slider__slide">
             <Image src={product.imageUrl} width={520} height={480} alt="" />
             <footer>
               <strong>{product.name}</strong>
@@ -59,7 +55,7 @@ export default function Home({ products }: HomeProps) {
 }
 
 
-export const getServerSideProps: GetServerSideProps = async () => {
+export const getStaticProps: GetStaticProps = async () => {
   const response = await stripe.products.list({
     expand: ['data.default_price']
   })
@@ -72,17 +68,15 @@ export const getServerSideProps: GetServerSideProps = async () => {
       name: item.name,
       imageUrl: item.images[0],
       url: item.url,
-      price: price.unit_amount / 100
+      price: price && price.unit_amount ? price.unit_amount / 100: 0
     }
   })
-  console.log(products)
 
   return {
     props: {
       products: products
-    }
+    },
+    revalidate: 60 * 60 * 2 // 2 horas
   }
-
-
 }
 
