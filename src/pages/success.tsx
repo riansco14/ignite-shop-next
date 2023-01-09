@@ -1,4 +1,5 @@
 import { GetServerSideProps } from "next";
+import Head from "next/head";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/router";
@@ -15,7 +16,11 @@ interface SuccessProps {
 }
 
 export default function Success({ customerName, product }: SuccessProps) {
-    return (
+    return (<>
+        <Head>
+            <title>Compra Efetuada | Ignite Shop</title>
+            <meta name="robots" content="noindex"/>
+        </Head>
         <SuccessContainer>
             <h1>Compra efetuada!</h1>
             <ImageContainer>
@@ -23,13 +28,14 @@ export default function Success({ customerName, product }: SuccessProps) {
             </ImageContainer>
 
 
-            <p>Uhuul <strong>{customerName}</strong>, sua <strong>{ product.name}</strong> já está a caminho da sua casa.</p>
+            <p>Uhuul <strong>{customerName}</strong>, sua <strong>{product.name}</strong> já está a caminho da sua casa.</p>
             <Link
                 href="/"
             >
                 Voltar ao catálogo
             </Link>
         </SuccessContainer>
+    </>
     )
 }
 
@@ -58,7 +64,7 @@ export const getServerSideProps: GetServerSideProps = async ({ query }) => {
             }
         }
     }
-    
+
 
     const customerName = session.customer_details?.name
     const product = session.line_items?.data[0].price?.product as Stripe.Product
