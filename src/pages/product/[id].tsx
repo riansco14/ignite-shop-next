@@ -1,10 +1,11 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { useRouter } from "next/router"
 import { ImageContainer, ProductContainer, ProductDetails } from '../../stitches/pages/product'
 import { GetStaticPaths, GetStaticProps } from 'next'
 import { stripe } from '../../lib/stripe'
 import Stripe from 'stripe'
 import Image from 'next/image'
+import axios from 'axios'
 
 interface ProductProps {
     product: {
@@ -17,9 +18,22 @@ interface ProductProps {
     }
 }
 
-export default function Product({ product }:ProductProps) {
-    function handleBuyProduct() {
-        console.log(product.defaultPriceId);
+export default function Product({ product }: ProductProps) {
+    const [isCreatingCheckoutSession, setIsCreatingCheckoutSession] = useState(false)
+
+    async function handleBuyProduct() {
+        try {
+            setIsCreatingCheckoutSession(true)
+            const response = await axios.post('/api/checkout', {
+                priceId: product.defaultPriceId
+            })
+
+            const { checkoutUrl } = response.data
+            window.location.href = checkoutUrl
+        } catch (error) {
+            setIsCreatingCheckoutSession(false)
+            alert("Falha ao redirecionar")
+        }
     }
 
     return (<ProductContainer>
@@ -28,11 +42,11 @@ export default function Product({ product }:ProductProps) {
         </ImageContainer>
 
         <ProductDetails>
-            <h1>{ product.name}</h1>
+            <h1>{product.name}</h1>
             <span>{product.price}</span>
 
-            <p>{ product.description }</p>
-            <button onClick={handleBuyProduct}>Comprar Agora</button>
+            <p>{product.description}</p>
+            <button disabled={isCreatingCheckoutSession} onClick={handleBuyProduct}>Comprar Agora</button>
         </ProductDetails>
 
     </ProductContainer>)
@@ -41,9 +55,11 @@ export default function Product({ product }:ProductProps) {
 export const getStaticPaths: GetStaticPaths = async () => {
     return {
         paths: [
-            {params: {
-                id : 'prod_N2TGFZFd3TWBZO'
-            }}
+            {
+                params: {
+                    id: 'prod_N2TGFZFd3TWBZO'
+                }
+            }
         ],
         fallback: 'blocking'
     }
